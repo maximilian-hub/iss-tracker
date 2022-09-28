@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>ISS Tracker</title>
+
+    <!--Leaflet CSS-->
+    <link 
+        rel="stylesheet" 
+        href="https://unpkg.com/leaflet@1.9.1/dist/leaflet.css"
+        integrity="sha256-sA+zWATbFveLLNqWO2gtiw3HL/lh1giY/Inf1BJ0z14="
+        crossorigin=""
+    />
+
+   <!--Leaflet JS-->
+    <script 
+        src="https://unpkg.com/leaflet@1.9.1/dist/leaflet.js"
+        integrity="sha256-NDI0K41gVbWqfkkaHj15IzU7PtMoelkzyKp8TOaFQ3s="
+        crossorigin="">
+    </script>
+
+   <style>
+        #map {
+            height: 180px;
+        }
+   </style>
+  </head>
+  <body>
+    <h1>Where is the ISS right now?</h1>
+    <p>
+        latitude: <span id="lat"></span><br/>
+        longitude: <span id="lon"></span><br/>
+    </p>
+    <div id="map"></div>
+    <script>
+        const url_iss = 'https://api.wheretheiss.at/v1/satellites/25544';
+        const url_tiles = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+        const url_icon = 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/International_Space_Station.svg/1600px-International_Space_Station.svg.png?20151219020127';
+        var map = {};
+        var marker = {};
+
+        //returns the current coordinates of the ISS as a LatLng object. {lat:x, lon:y}
+        async function getISSCoords() {
+            const response = await fetch(url_iss);
+            const data = await response.json();
+            const {latitude,longitude} = data;
+
+            console.log("ISS data retrieved.");
+
+            document.getElementById('lat').textContent = latitude;
+            document.getElementById('lon').textContent = longitude;
+
+            return {
+                lat: latitude,
+                lon: longitude
+            };
+        }
+
+        async function initializeMap() {
+            const issCoords = await getISSCoords(); //{latitude,longitude}
+            console.log(issCoords);
+
+            //define marker icon to replace the default
+            const issIcon = L.icon({
+                iconUrl: url_icon,
+                iconSize: [50,32],
+                iconAnchor: [25, 16],
+                popupAnchor: [-3, -76]
+            });
+
+            //create map box
+            map = L.map('map',
+                {zoomControl: true,
+                dragging: false}
+            ).setView(issCoords,1);
+
+            //add tiles to map
+            L.tileLayer(url_tiles, {
+                maxZoom: 19,
+                minZoom: 1,
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
+
+            //add marker to map, with custom icon
+            marker = L.marker(
+                issCoords, 
+                {icon: issIcon})
+            .addTo(map);
+        }
+
+        async function updateMap() {
+            const issCoords = await getISSCoords();
+
+            //update marker position
+            marker.latlng = issCoords;
+            //update map view
+            map.setView(issCoords);
+
+        }
+
+        
+        initializeMap();
+
+        setInterval(updateMap,2500);
+
+        /*
+        TODO: 
+            -upload to github!
+            -make it look nicer!
+                -maybe a timer to next update?
+            -add some interesting tidbits about the ISS!
+            -add credits!
+        */
+    </script>
+  </body>
+</html>
