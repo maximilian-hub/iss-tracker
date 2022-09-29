@@ -47,6 +47,8 @@
 
             console.log("ISS data retrieved.");
 
+            //TODO: append .toFixed(2) to clean up decimal places
+            //TODO: add degree character
             document.getElementById('lat').textContent = latitude;
             document.getElementById('lon').textContent = longitude;
 
@@ -89,23 +91,21 @@
         }
 
         async function updateMap() {
+            //update coordinates
             const issCoords = await getISSCoords();
-
             //update marker position
-            marker.latlng = issCoords;
+            marker.setLatLng(issCoords);
             //update map view
             map.setView(issCoords);
-
         }
 
         
         initializeMap();
 
-        setInterval(updateMap,2500);
+        setInterval(updateMap,1000);
 
         /*
         TODO: 
-            -upload to github!
             -make it look nicer!
                 -maybe a timer to next update?
             -add some interesting tidbits about the ISS!
